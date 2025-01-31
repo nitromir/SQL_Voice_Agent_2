@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "start": "next start -p $PORT",
     "build": "next build",
-    "start": "next start",
+    "postinstall": "npm run build"
     "lint": "next lint"
   },
   "dependencies": {
