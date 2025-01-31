@@ -2,7 +2,7 @@ export class AudioProcessor {
   private audioContext: AudioContext | null = null;
   private workletNode: AudioWorkletNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
-  private onAudioData?: (data: Int16Array) => void;
+  private onAudioData?: (data: ArrayBuffer) => void;
   private onAudioLevel?: (level: number) => void;
 
   async initialize(): Promise<void> {
@@ -68,7 +68,7 @@ export class AudioProcessor {
     console.log('🎵 Audio nodes connected');
   }
 
-  setAudioDataHandler(handler: (data: Int16Array) => void): void {
+  setAudioDataHandler(handler: (data: ArrayBuffer) => void): void {
     this.onAudioData = handler;
   }
 
