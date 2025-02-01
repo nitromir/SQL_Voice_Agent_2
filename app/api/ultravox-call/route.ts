@@ -41,14 +41,14 @@ export async function GET() {
         selectedTools: [{
           temporaryTool: {
             modelToolName: 'query_database',
-            description: 'Execute a natural language query against the database using the SQL agent',
+            description: 'Performing a conversational agent on an arbitrary topic.',
             timeout: '15s',
             dynamicParameters: [{
               name: 'query',
               location: 'PARAMETER_LOCATION_BODY',
               schema: {
                 type: 'string',
-                description: 'The natural language query to execute against the database'
+                description: 'Performing a conversational agent on an arbitrary topic.'
               },
               required: true
             }],
