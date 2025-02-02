@@ -502,10 +502,22 @@ export class OpenAIProvider implements AIProvider {
     return btoa(binary);
   }
 
-  async processAudio(audioData: Int16Array | ArrayBuffer): Promise<void> {
-    if (audioData instanceof Int16Array) {
-      audioData = audioData.buffer.slice(audioData.byteOffset, audioData.byteLength + audioData.byteOffset);
+  async processAudio(audioData: ArrayBuffer | SharedArrayBuffer): Promise<void> {
+    // Преобразуем SharedArrayBuffer в ArrayBuffer, если необходимо
+    if (audioData instanceof SharedArrayBuffer) {
+      audioData = new ArrayBuffer(audioData.byteLength);
+      const sourceView = new Uint8Array(audioData);
+      const destView = new Uint8Array(audioData);
+      destView.set(sourceView);
     }
+
+    // Преобразуем ArrayBuffer в Int16Array, если необходимо
+    if (audioData instanceof ArrayBuffer) {
+      const int16Array = new Int16Array(audioData);
+      // Здесь можно добавить логику обработки аудиоданных
+      console.log(int16Array);
+    }
+
     if (!this.dc || this.dc.readyState !== 'open') {
       this.logDebug('❌ Data channel not ready');
       return;
