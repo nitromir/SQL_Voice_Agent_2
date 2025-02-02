@@ -1,6 +1,6 @@
 import { AIProvider, ConnectionState, Message, DebugInfo, Visualization } from '../services/ai/types';
 import { AudioProcessor } from '../services/ai/audio/AudioProcessor';
-import { UltravoxSession, UltravoxSessionStatus } from 'ultravox-client';
+import { createSession as UltravoxCreateSession, UltravoxSessionStatus, UltravoxSession } from 'ultravox-client';
 
 type Role = 'user' | 'agent';
 type Medium = 'voice' | 'text';
@@ -60,7 +60,7 @@ export class UltravoxProvider implements AIProvider {
         }
 
         try {
-            this.ultravoxSession = new UltravoxSession();
+            this.ultravoxSession = await UltravoxCreateSession(this.sessionId);
             this.connectionState = 'connecting';
             this.logDebug('Connecting to Ultravox');
 
@@ -90,7 +90,7 @@ export class UltravoxProvider implements AIProvider {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer Ww8Avbj7.yrU5seaRVjsxATiJs8ElTewWWLs9Hirk`
+                    'Authorization': `Bearer YOUR_API_KEY`
                 },
                 body: JSON.stringify({
                     model: "fixie-ai/ultravox-70B",
