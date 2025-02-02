@@ -1,46 +1,94 @@
 import { AIProvider, ConnectionState, Message, DebugInfo, Visualization } from '../services/ai/types';
 
 export class UltravoxProvider implements AIProvider {
+    private audioElement: HTMLAudioElement | null = null;
+    private audioProcessor: AudioProcessor | null = null;
+    private sessionId: number | null = null;
+    private ultravoxSession: UltravoxSession | null = null;
+    private connectionState: ConnectionState = 'new';
+    private stateChangeHandler?: (state: ConnectionState) => void;
+    private messageHandler?: (message: Message) => void;
+    private visualizationHandler?: (visualization: Visualization | null) => void;
+    private debugHandler?: (info: DebugInfo) => void;
+    private mediaStream: MediaStream | null = null;
+
+    constructor() {
+        this.audioElement = new Audio();
+        this.audioElement.autoplay = true;
+        this.audioProcessor = new AudioProcessor();
+        this.sessionId = Math.floor(Math.random() * 1000000);
+    }
+
+    private logDebug(action: string, ...args: any[]) {
+        console.log(action, ...args);
+        if (this.debugHandler) {
+            this.debugHandler({ lastAction: action });
+        }
+    }
+
+    private mapUltravoxStatusToConnectionState(status: UltravoxSessionStatus): ConnectionState {
+        switch (status) {
+            case UltravoxSessionStatus.DISCONNECTED:
+                return 'disconnected';
+            case UltravoxSessionStatus.DISCONNECTING:
+                return 'disconnected';
+            case UltravoxSessionStatus.CONNECTING:
+                return 'connecting';
+            case UltravoxSessionStatus.IDLE:
+            case UltravoxSessionStatus.LISTENING:
+                // ... ваш код ...
+                break;
+        }
+        return 'disconnected'; // По умолчанию
+    }
+
     async processAudio(audioData: Int16Array): Promise<void> {
-        // Здесь можно добавить логику обработки аудиоданных
-        console.log(audioData);
-
-        // Пример отправки данных через другой механизм
-        // Например, через WebSocket или другой API
+        if (audioData instanceof Int16Array) {
+            audioData = new ArrayBuffer(audioData.byteLength);
+            const sourceView = new Uint8Array(audioData.buffer, audioData.byteOffset, audioData.byteLength);
+            const destView = new Uint8Array(audioData);
+            destView.set(sourceView);
+        }
+        // ... ваш код обработки ...
     }
 
-    connect(): Promise<void> {
-        // Логика подключения к Ultravox
-        return Promise.resolve();
-    }
+    async addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void> {
+        if (!this.ultravoxSession) {
+            throw new Error('No active Ultravox session');
+        }
 
-    disconnect(): void {
-        // Логика отключения от Ultravox
-    }
+        try {
+            // Store the media stream for cleanup
+            this.mediaStream = stream;
 
-    isConnected(): boolean {
-        // Проверка состояния соединения
-        return false;
-    }
-
-    addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void> {
-        // Логика добавления аудиотрека
-        return Promise.resolve();
+            // Add the audio track to the WebRTC connection
+            const pc = (this.ultravoxSession as any).peerConnection;
+            if (pc) {
+                stream.getTracks().forEach(track => {
+                    pc.addTrack(track, stream);
+                });
+            }
+            
+            this.logDebug('Added audio track to Ultravox session');
+        } catch (error) {
+            this.logDebug('Error adding audio track:', error);
+            throw error;
+        }
     }
 
     setStateChangeHandler(handler: (state: ConnectionState) => void): void {
-        // Установка обработчика изменения состояния соединения
+        this.stateChangeHandler = handler;
     }
 
     setMessageHandler(handler: (message: Message) => void): void {
-        // Установка обработчика сообщений
+        this.messageHandler = handler;
     }
 
     setVisualizationHandler(handler: (visualization: Visualization | null) => void): void {
-        // Установка обработчика визуализации
+        this.visualizationHandler = handler;
     }
 
     setDebugHandler(handler: (info: DebugInfo) => void): void {
-        // Установка обработчика отладочной информации
+        this.debugHandler = handler;
     }
 } 
