@@ -2,9 +2,21 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { AudioService } from '../services/audio/AudioService';
 import { OpenAIProvider } from '../providers/OpenAIProvider';
 import { UltravoxProvider } from '../providers/UltravoxProvider';
-import { Message, Visualization, DebugInfo, AIProvider, ConnectionState } from '../types';
+import { Message, Visualization, DebugInfo, ConnectionState } from '../types';
 
 export type AIModel = 'openai' | 'ultravox';
+
+// Определяем интерфейс AIProvider
+export interface AIProvider {
+  connect(): Promise<void>;
+  disconnect(): void;
+  isConnected(): boolean;
+  setStateChangeHandler(handler: (state: ConnectionState) => void): void;
+  setMessageHandler(handler: (message: Message) => void): void;
+  setVisualizationHandler(handler: (visualization: Visualization | null) => void): void;
+  setDebugHandler(handler: (info: DebugInfo) => void): void;
+  processAudio(data: Int16Array): Promise<void>;
+}
 
 export function useAIVoiceChat() {
   // State
