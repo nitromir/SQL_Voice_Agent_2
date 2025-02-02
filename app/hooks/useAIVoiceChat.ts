@@ -110,7 +110,7 @@ export function useAIVoiceChat() {
 
       // Create new provider instance if needed
       if (!aiProvider.current) {
-        aiProvider.current = selectedModel === 'openai' 
+        aiProvider.current = selectedModel === 'openai'
           ? new OpenAIProvider()
           : new UltravoxProvider();
 
