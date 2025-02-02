@@ -1,4 +1,16 @@
 import { AIProvider, ConnectionState, Message, DebugInfo, Visualization } from '../services/ai/types';
+import { AudioProcessor } from '../services/ai/audio/AudioProcessor';
+import { UltravoxSession, UltravoxSessionStatus } from 'ultravox-client';
+
+type Role = 'user' | 'agent';
+type Medium = 'voice' | 'text';
+
+interface Transcript {
+  text: string;
+  isFinal: boolean;
+  speaker: Role;
+  medium: Medium;
+}
 
 export class UltravoxProvider implements AIProvider {
     private audioElement: HTMLAudioElement | null = null;
@@ -43,13 +55,13 @@ export class UltravoxProvider implements AIProvider {
     }
 
     async processAudio(audioData: Int16Array): Promise<void> {
-        if (audioData instanceof Int16Array) {
-            audioData = new ArrayBuffer(audioData.byteLength);
-            const sourceView = new Uint8Array(audioData.buffer, audioData.byteOffset, audioData.byteLength);
-            const destView = new Uint8Array(audioData);
-            destView.set(sourceView);
+        if (audioData instanceof ArrayBuffer) {
+            audioData = new Int16Array(audioData);
         }
         // ... ваш код обработки ...
+        if (this.audioProcessor) {
+            this.audioProcessor.processAudioData(audioData);
+        }
     }
 
     async addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void> {
