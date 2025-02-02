@@ -173,7 +173,10 @@ export function useAIVoiceChat() {
 
       // Add the track to the connection
       if (aiProvider.current) {
-        await aiProvider.current.addAudioTrack(audioTrack, stream);
+        const audioBuffer = await someFunctionThatReturnsArrayBuffer();
+        const int16Array = new Int16Array(audioBuffer);
+        const buffer = int16Array.buffer.slice(int16Array.byteOffset, int16Array.byteLength + int16Array.byteOffset);
+        await this.provider.processAudio(buffer);
       }
 
       // Apply initial mute state
