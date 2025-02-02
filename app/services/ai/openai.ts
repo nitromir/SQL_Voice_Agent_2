@@ -502,30 +502,18 @@ export class OpenAIProvider implements AIProvider {
     return btoa(binary);
   }
 
-  async processAudio(audioData: ArrayBuffer | SharedArrayBuffer): Promise<void> {
-    // Преобразуем SharedArrayBuffer в ArrayBuffer, если необходимо
-    if (audioData instanceof SharedArrayBuffer) {
-      audioData = new ArrayBuffer(audioData.byteLength);
-      const sourceView = new Uint8Array(audioData);
-      const destView = new Uint8Array(audioData);
-      destView.set(sourceView);
-    }
+  async processAudio(audioData: Int16Array): Promise<void> {
+    // Здесь можно добавить логику обработки аудиоданных
+    console.log(audioData);
 
-    // Преобразуем ArrayBuffer в Int16Array для обработки аудиоданных
-    if (audioData instanceof ArrayBuffer) {
-      const int16Array = new Int16Array(audioData);
-      // Здесь можно добавить логику обработки аудиоданных
-      console.log(int16Array);
-
-      // Пример отправки данных через DataChannel
-      if (this.dc?.readyState === 'open') {
-        this.dc.send(JSON.stringify({
-          type: 'audio_data',
-          data: Array.from(int16Array)
-        }));
-      } else {
-        this.logDebug('❌ Data channel not ready');
-      }
+    // Пример отправки данных через DataChannel
+    if (this.dc?.readyState === 'open') {
+      this.dc.send(JSON.stringify({
+        type: 'audio_data',
+        data: Array.from(audioData)
+      }));
+    } else {
+      this.logDebug('❌ Data channel not ready');
     }
   }
 
@@ -546,7 +534,7 @@ export class OpenAIProvider implements AIProvider {
     // Set up audio data handler
     this.audioProcessor.setAudioDataHandler((audioData) => {
       if (this.dc?.readyState === 'open') {
-        this.processAudio(audioData.buffer);
+        this.processAudio(audioData);
       }
     });
 
