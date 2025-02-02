@@ -502,7 +502,10 @@ export class OpenAIProvider implements AIProvider {
     return btoa(binary);
   }
 
-  async processAudio(audioData: ArrayBuffer): Promise<void> {
+  async processAudio(audioData: Int16Array | ArrayBuffer): Promise<void> {
+    if (audioData instanceof Int16Array) {
+      audioData = audioData.buffer.slice(audioData.byteOffset, audioData.byteLength + audioData.byteOffset);
+    }
     if (!this.dc || this.dc.readyState !== 'open') {
       this.logDebug('❌ Data channel not ready');
       return;
