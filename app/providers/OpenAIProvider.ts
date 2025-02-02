@@ -1,9 +1,9 @@
 import { AIProvider, ConnectionState, Message, DebugInfo, Visualization } from '../services/ai/types';
 
 export class OpenAIProvider implements AIProvider {
-    async processAudio(audioData: ArrayBuffer): Promise<void> {
+    async processAudio(audioData: Int16Array): Promise<void> {
         // Здесь можно добавить логику обработки аудиоданных
-        console.log(new Int16Array(audioData));
+        console.log(audioData);
 
         // Пример отправки данных через другой механизм
         // Например, через WebSocket или другой API
