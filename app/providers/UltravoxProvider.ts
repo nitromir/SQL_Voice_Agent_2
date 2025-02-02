@@ -75,9 +75,58 @@ export class UltravoxProvider implements AIProvider {
                 }
             });
 
-            await this.ultravoxSession.joinCall('YOUR_JOIN_URL');
+            const joinUrl = await this.getJoinUrl();
+
+            await this.ultravoxSession.joinCall(joinUrl);
         } catch (error) {
             this.logDebug('Error connecting to Ultravox:', error);
+            throw error;
+        }
+    }
+
+    private async getJoinUrl(): Promise<string> {
+        try {
+            const response = await fetch('https://api.ultravox.com/v1/calls', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer Ww8Avbj7.yrU5seaRVjsxATiJs8ElTewWWLs9Hirk`
+                },
+                body: JSON.stringify({
+                    model: "fixie-ai/ultravox-70B",
+                    systemPrompt: "Ваш системный промт",
+                    selectedTools: [
+                        {
+                            "modelToolName": "stock_price",
+                            "description": "Получение текущей стоимости акции по заданному символу",
+                            "dynamicParameters": [
+                                {
+                                    "name": "symbol",
+                                    "location": "PARAMETER_LOCATION_QUERY",
+                                    "schema": {
+                                        "type": "string",
+                                        "description": "Символ акции (например, AAPL для Apple Inc.)"
+                                    },
+                                    "required": true
+                                }
+                            ],
+                            "http": {
+                                "baseUrlPattern": "https://api.stockmarket.com/v1/price",
+                                "httpMethod": "GET"
+                            }
+                        }
+                    ]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.joinUrl;
+        } catch (error) {
+            this.logDebug('Error getting join URL:', error);
             throw error;
         }
     }
