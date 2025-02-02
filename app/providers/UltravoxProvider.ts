@@ -54,6 +54,60 @@ export class UltravoxProvider implements AIProvider {
         return 'disconnected'; // По умолчанию
     }
 
+    async connect(): Promise<void> {
+        if (this.ultravoxSession) {
+            throw new Error('Ultravox session already exists');
+        }
+
+        try {
+            this.ultravoxSession = await UltravoxSession.create(this.sessionId);
+            this.connectionState = 'connecting';
+            this.logDebug('Connecting to Ultravox');
+
+            // Обработка изменений состояния сессии
+            this.ultravoxSession.onStatusChange((status: UltravoxSessionStatus) => {
+                const newState = this.mapUltravoxStatusToConnectionState(status);
+                if (this.connectionState !== newState) {
+                    this.connectionState = newState;
+                    this.logDebug('Connection state changed:', newState);
+                    if (this.stateChangeHandler) {
+                        this.stateChangeHandler(newState);
+                    }
+                }
+            });
+
+            // Подключение к сессии
+            await this.ultravoxSession.connect();
+        } catch (error) {
+            this.logDebug('Error connecting to Ultravox:', error);
+            throw error;
+        }
+    }
+
+    disconnect(): void {
+        if (!this.ultravoxSession) {
+            return;
+        }
+
+        try {
+            this.ultravoxSession.disconnect();
+            this.connectionState = 'disconnected';
+            this.logDebug('Disconnected from Ultravox');
+        } catch (error) {
+            this.logDebug('Error disconnecting from Ultravox:', error);
+        } finally {
+            if (this.mediaStream) {
+                this.mediaStream.getTracks().forEach(track => track.stop());
+                this.mediaStream = null;
+            }
+            this.ultravoxSession = null;
+        }
+    }
+
+    isConnected(): boolean {
+        return this.connectionState === 'connected';
+    }
+
     async processAudio(audioData: Int16Array): Promise<void> {
         if (audioData instanceof ArrayBuffer) {
             audioData = new Int16Array(audioData);
