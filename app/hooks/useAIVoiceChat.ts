@@ -173,10 +173,22 @@ export function useAIVoiceChat() {
 
       // Add the track to the connection
       if (aiProvider.current) {
-        const audioBuffer = await someFunctionThatReturnsArrayBuffer();
-        const int16Array = new Int16Array(audioBuffer);
-        const buffer = int16Array.buffer.slice(int16Array.byteOffset, int16Array.byteLength + int16Array.byteOffset);
-        await aiProvider.current.processAudio(buffer);
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+
+        processor.onaudioprocess = async (e) => {
+          const inputData = e.inputBuffer.getChannelData(0);
+          const buffer = new ArrayBuffer(inputData.length * 2); // 16-bit audio
+          const int16Array = new Int16Array(buffer);
+          for (let i = 0; i < inputData.length; i++) {
+            int16Array[i] = Math.min(Math.max(-1, inputData[i]), 1) * 0x7FFF;
+          }
+          await aiProvider.current.processAudio(int16Array);
+        };
       }
 
       // Apply initial mute state
