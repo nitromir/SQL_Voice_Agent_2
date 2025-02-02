@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { AudioService } from '../services/audio/AudioService';
-import { OpenAIProvider } from './path/to/OpenAIProvider';
-import { UltravoxProvider } from './path/to/UltravoxProvider';
+import { OpenAIProvider } from '../providers/OpenAIProvider';
+import { UltravoxProvider } from '../providers/UltravoxProvider';
 import { Message, Visualization, DebugInfo, AIProvider, ConnectionState } from '../types';
 
 export type AIModel = 'openai' | 'ultravox';
