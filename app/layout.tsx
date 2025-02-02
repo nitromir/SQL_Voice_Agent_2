@@ -4,8 +4,8 @@ import type { Metadata } from 'next'
 const inter = Inter({ subsets: ['latin'] })
  
 export const metadata: Metadata = {
-  title: 'Крайне злобный агент',
-  description: 'Приложение добрых людей лбом к холодному экрану.',
+  title: 'SQL Voice Agent',
+  description: 'A realtime application using OpenAI, Ultravox and WebRTC',
 }
  
 export default function RootLayout({
