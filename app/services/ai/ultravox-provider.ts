@@ -1,24 +1,12 @@
 import { AIProvider, ConnectionState, Message, DebugInfo, Visualization } from '../services/ai/types';
 
 export class UltravoxProvider implements AIProvider {
-    async processAudio(audioData: ArrayBuffer | SharedArrayBuffer): Promise<void> {
-        // Преобразуем SharedArrayBuffer в ArrayBuffer, если необходимо
-        if (audioData instanceof SharedArrayBuffer) {
-            audioData = new ArrayBuffer(audioData.byteLength);
-            const sourceView = new Uint8Array(audioData);
-            const destView = new Uint8Array(audioData);
-            destView.set(sourceView);
-        }
+    async processAudio(audioData: Int16Array): Promise<void> {
+        // Здесь можно добавить логику обработки аудиоданных
+        console.log(audioData);
 
-        // Преобразуем ArrayBuffer в Int16Array для обработки аудиоданных
-        if (audioData instanceof ArrayBuffer) {
-            const int16Array = new Int16Array(audioData);
-            // Здесь можно добавить логику обработки аудиоданных
-            console.log(int16Array);
-
-            // Пример отправки данных через другой механизм
-            // Например, через WebSocket или другой API
-        }
+        // Пример отправки данных через другой механизм
+        // Например, через WebSocket или другой API
     }
 
     connect(): Promise<void> {
