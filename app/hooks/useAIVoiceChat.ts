@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { AudioService } from '../services/audio/AudioService';
-import { OpenAIProvider } from '../services/ai/openai';
-import { UltravoxProvider } from '../services/ai/ultravox-provider';
+import { OpenAIProvider } from './path/to/OpenAIProvider';
+import { UltravoxProvider } from './path/to/UltravoxProvider';
 import { Message, Visualization, DebugInfo, AIProvider, ConnectionState } from '../types';
 
 export type AIModel = 'openai' | 'ultravox';
@@ -110,7 +110,7 @@ export function useAIVoiceChat() {
 
       // Create new provider instance if needed
       if (!aiProvider.current) {
-        aiProvider.current = selectedModel === 'openai' 
+        aiProvider.current = selectedModel === 'openai'
           ? new OpenAIProvider()
           : new UltravoxProvider();
 
@@ -173,7 +173,26 @@ export function useAIVoiceChat() {
 
       // Add the track to the connection
       if (aiProvider.current) {
-        await aiProvider.current.addAudioTrack(audioTrack, stream);
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+
+        processor.onaudioprocess = async (e) => {
+          const inputData = e.inputBuffer.getChannelData(0);
+          const buffer = new ArrayBuffer(inputData.length * 2); // 16-bit audio
+          const int16Array = new Int16Array(buffer);
+          for (let i = 0; i < inputData.length; i++) {
+            int16Array[i] = Math.min(Math.max(-1, inputData[i]), 1) * 0x7FFF;
+          }
+          if (aiProvider.current) {
+            await aiProvider.current.processAudio(int16Array);
+          } else {
+            logDebug('AI provider is not initialized');
+          }
+        };
       }
 
       // Apply initial mute state
