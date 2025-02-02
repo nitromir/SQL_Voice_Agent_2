@@ -5,5 +5,7 @@ class OpenAIProvider implements AIProvider {
             audioData = new Int16Array(audioData);
         }
         // ... существующая логика ...
+        const buffer = audioData.buffer;
+        // ... ваш код ...
     }
 }
