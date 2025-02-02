@@ -90,7 +90,7 @@ export class UltravoxProvider implements AIProvider {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer YOUR_API_KEY`
+                    'Authorization': `Bearer Ww8Avbj7.yrU5seaRVjsxATiJs8ElTewWWLs9Hirk`
                 },
                 body: JSON.stringify({
                     model: "fixie-ai/ultravox-70B",
