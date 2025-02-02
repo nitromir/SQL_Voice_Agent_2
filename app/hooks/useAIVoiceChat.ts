@@ -187,7 +187,11 @@ export function useAIVoiceChat() {
           for (let i = 0; i < inputData.length; i++) {
             int16Array[i] = Math.min(Math.max(-1, inputData[i]), 1) * 0x7FFF;
           }
-          await aiProvider.current.processAudio(int16Array);
+          if (aiProvider.current) {
+            await aiProvider.current.processAudio(int16Array);
+          } else {
+            logDebug('AI provider is not initialized');
+          }
         };
       }
 
