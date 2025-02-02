@@ -1,5 +1,5 @@
 import { AIProvider, Message, Visualization, ConnectionState, DebugInfo } from '../../types';
-import { AudioProcessor } from './app/services/audio/AudioProcessor';
+import { AudioProcessor } from './app/services/audio/AudioProcessor/AudioProcessor.ts';
 import { UltravoxSession, UltravoxSessionStatus } from '^0.3.4';
 
 type Role = 'user' | 'agent';
