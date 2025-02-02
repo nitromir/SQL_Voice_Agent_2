@@ -176,7 +176,7 @@ export function useAIVoiceChat() {
         const audioBuffer = await someFunctionThatReturnsArrayBuffer();
         const int16Array = new Int16Array(audioBuffer);
         const buffer = int16Array.buffer.slice(int16Array.byteOffset, int16Array.byteLength + int16Array.byteOffset);
-        await this.provider.processAudio(buffer);
+        await aiProvider.current.processAudio(buffer);
       }
 
       // Apply initial mute state
