@@ -502,18 +502,46 @@ export class OpenAIProvider implements AIProvider {
     return btoa(binary);
   }
 
-  async processAudio(audioData: Int16Array): Promise<void> {
-    // Здесь можно добавить логику обработки аудиоданных
-    console.log(audioData);
-
-    // Пример отправки данных через DataChannel
-    if (this.dc?.readyState === 'open') {
-      this.dc.send(JSON.stringify({
-        type: 'audio_data',
-        data: Array.from(audioData)
-      }));
-    } else {
+  async processAudio(audioData: ArrayBuffer): Promise<void> {
+    if (!this.dc || this.dc.readyState !== 'open') {
       this.logDebug('❌ Data channel not ready');
+      return;
+    }
+
+    try {
+      // Log the incoming data for debugging
+      this.logDebug(`📢 Received audio data: ${audioData?.constructor?.name}, byteLength=${audioData?.byteLength}`);
+
+      // Skip if audio level is too low
+      if (!audioData?.byteLength) {
+        return;  // Silently skip low-level audio
+      }
+
+      // Convert to base64
+      const base64Audio = this.arrayBufferToBase64(audioData);
+      
+      if (!base64Audio) {
+        this.logDebug('❌ Failed to convert audio to base64');
+        return;
+      }
+
+      // Clear any existing buffer
+      this.dc.send(JSON.stringify({
+        type: 'input_audio_buffer.clear'
+      }));
+
+      // Send the audio chunk
+      this.dc.send(JSON.stringify({
+        type: 'input_audio_buffer.append',
+        audio: base64Audio
+      }));
+
+      // Commit the buffer to start processing
+      this.dc.send(JSON.stringify({
+        type: 'input_audio_buffer.commit'
+      }));
+    } catch (error) {
+      this.logDebug('❌ Error processing audio:', error);
     }
   }
 
@@ -534,7 +562,7 @@ export class OpenAIProvider implements AIProvider {
     // Set up audio data handler
     this.audioProcessor.setAudioDataHandler((audioData) => {
       if (this.dc?.readyState === 'open') {
-        this.processAudio(audioData);
+        this.processAudio(audioData.buffer);
       }
     });
 

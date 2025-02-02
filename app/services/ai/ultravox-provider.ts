@@ -233,11 +233,8 @@ export class UltravoxProvider implements AIProvider {
     }
   }
 
-  async processAudio(audioData: Int16Array | ArrayBuffer): Promise<void> {
-    if (audioData instanceof Int16Array) {
-      audioData = audioData.buffer.slice(audioData.byteOffset, audioData.byteLength + audioData.byteOffset);
-    }
-    // ... ваш код обработки ...
+  async processAudio(audioData: ArrayBuffer): Promise<void> {
+    // Not needed for Ultravox as it handles audio internally
   }
 
   async addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void> {

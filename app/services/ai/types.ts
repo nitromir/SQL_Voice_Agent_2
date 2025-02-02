@@ -23,7 +23,10 @@ export interface Visualization {
 }
 
 export interface AIProvider {
-  processAudio(audioData: Int16Array): Promise<void>;
+  connect(): Promise<void>;
+  disconnect(): void;
+  isConnected(): boolean;
+  processAudio(audioData: ArrayBuffer): Promise<void>;
   addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void>;
   setStateChangeHandler(handler: (state: ConnectionState) => void): void;
   setMessageHandler(handler: (message: Message) => void): void;
