@@ -60,13 +60,12 @@ export class UltravoxProvider implements AIProvider {
         }
 
         try {
-            this.ultravoxSession = await UltravoxSession.create(this.sessionId);
+            this.ultravoxSession = new UltravoxSession();
             this.connectionState = 'connecting';
             this.logDebug('Connecting to Ultravox');
 
-            // Обработка изменений состояния сессии
-            this.ultravoxSession.onStatusChange((status: UltravoxSessionStatus) => {
-                const newState = this.mapUltravoxStatusToConnectionState(status);
+            this.ultravoxSession.addEventListener('status', (event: { status: UltravoxSessionStatus }) => {
+                const newState = this.mapUltravoxStatusToConnectionState(event.status);
                 if (this.connectionState !== newState) {
                     this.connectionState = newState;
                     this.logDebug('Connection state changed:', newState);
@@ -76,8 +75,7 @@ export class UltravoxProvider implements AIProvider {
                 }
             });
 
-            // Подключение к сессии
-            await this.ultravoxSession.connect();
+            await this.ultravoxSession.joinCall('YOUR_JOIN_URL');
         } catch (error) {
             this.logDebug('Error connecting to Ultravox:', error);
             throw error;
@@ -90,7 +88,7 @@ export class UltravoxProvider implements AIProvider {
         }
 
         try {
-            this.ultravoxSession.disconnect();
+            this.ultravoxSession.leaveCall();
             this.connectionState = 'disconnected';
             this.logDebug('Disconnected from Ultravox');
         } catch (error) {
@@ -120,10 +118,8 @@ export class UltravoxProvider implements AIProvider {
         }
 
         try {
-            // Store the media stream for cleanup
             this.mediaStream = stream;
 
-            // Add the audio track to the WebRTC connection
             const pc = (this.ultravoxSession as any).peerConnection;
             if (pc) {
                 stream.getTracks().forEach(track => {
