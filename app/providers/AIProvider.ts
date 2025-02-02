@@ -1,3 +1,3 @@
-interface AIProvider {
-    processAudio(audioData: Int16Array): Promise<void>;
+export interface AIProvider {
+    processAudio(audioData: ArrayBuffer): Promise<void>;
 }
