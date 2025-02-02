@@ -1,11 +1,47 @@
-class OpenAIProvider extends AIProvider {
+import { AIProvider } from '../services/ai/types';
+
+class OpenAIProvider implements AIProvider {
     async processAudio(audioData: ArrayBuffer): Promise<void> {
         // Преобразуем ArrayBuffer в Int16Array, если необходимо
         if (audioData instanceof ArrayBuffer) {
-            audioData = new Int16Array(audioData);
+            const int16Array = new Int16Array(audioData);
+            // Здесь можно добавить логику обработки аудиоданных
+            console.log(int16Array);
         }
-        // ... существующая логика ...
-        const buffer = audioData.buffer;
-        // ... ваш код ...
+    }
+
+    connect(): Promise<void> {
+        // Логика подключения к OpenAI
+        return Promise.resolve();
+    }
+
+    disconnect(): void {
+        // Логика отключения от OpenAI
+    }
+
+    isConnected(): boolean {
+        // Проверка состояния соединения
+        return false;
+    }
+
+    addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void> {
+        // Логика добавления аудиотрека
+        return Promise.resolve();
+    }
+
+    setStateChangeHandler(handler: (state: ConnectionState) => void): void {
+        // Установка обработчика изменения состояния соединения
+    }
+
+    setMessageHandler(handler: (message: Message) => void): void {
+        // Установка обработчика сообщений
+    }
+
+    setVisualizationHandler(handler: (visualization: Visualization | null) => void): void {
+        // Установка обработчика визуализации
+    }
+
+    setDebugHandler(handler: (info: DebugInfo) => void): void {
+        // Установка обработчика отладочной информации
     }
 }
