@@ -1,3 +1,3 @@
 interface AIProvider {
-    processAudio(audioData: ArrayBuffer): Promise<void>;
-} 
+    processAudio(audioData: Int16Array): Promise<void>;
+}
