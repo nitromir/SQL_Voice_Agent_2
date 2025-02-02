@@ -1,6 +1,6 @@
-class UltravoxProvider implements AIProvider {
-    async processAudio(audioData: Int16Array): Promise<void> {
-        const buffer = audioData.buffer;
+class UltravoxProvider extends AIProvider {
+    async processAudio(audioData: ArrayBuffer): Promise<void> {
+        const buffer = audioData;
         // ... ваш код ...
     }
 } 
