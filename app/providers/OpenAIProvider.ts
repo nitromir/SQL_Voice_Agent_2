@@ -1,4 +1,4 @@
-import { AIProvider } from '../services/ai/types';
+import { AIProvider, ConnectionState, Message, DebugInfo, Visualization } from '../services/ai/types';
 
 class OpenAIProvider implements AIProvider {
     async processAudio(audioData: ArrayBuffer): Promise<void> {
