@@ -26,11 +26,12 @@ export interface AIProvider {
   connect(): Promise<void>;
   disconnect(): void;
   isConnected(): boolean;
+  processAudio(audioData: ArrayBuffer): Promise<void>;
+  addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void>;
   setStateChangeHandler(handler: (state: ConnectionState) => void): void;
   setMessageHandler(handler: (message: Message) => void): void;
   setVisualizationHandler(handler: (visualization: Visualization | null) => void): void;
   setDebugHandler(handler: (info: DebugInfo) => void): void;
-  processAudio(audioData: Int16Array): Promise<void>;
 }
 
 export interface AIProviderConfig {

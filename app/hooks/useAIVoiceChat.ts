@@ -1,22 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { AudioService } from '../services/audio/AudioService';
-import { OpenAIProvider } from '../providers/OpenAIProvider';
-import { UltravoxProvider } from '../providers/UltravoxProvider';
-import { Message, Visualization, DebugInfo, ConnectionState } from '../types';
+import { OpenAIProvider } from '../services/ai/openai';
+import { UltravoxProvider } from '../services/ai/ultravox-provider';
+import { Message, Visualization, DebugInfo, AIProvider, ConnectionState } from '../types';
 
 export type AIModel = 'openai' | 'ultravox';
-
-// Определяем интерфейс AIProvider
-export interface AIProvider {
-  connect(): Promise<void>;
-  disconnect(): void;
-  isConnected(): boolean;
-  setStateChangeHandler(handler: (state: ConnectionState) => void): void;
-  setMessageHandler(handler: (message: Message) => void): void;
-  setVisualizationHandler(handler: (visualization: Visualization | null) => void): void;
-  setDebugHandler(handler: (info: DebugInfo) => void): void;
-  processAudio(data: Int16Array): Promise<void>;
-}
 
 export function useAIVoiceChat() {
   // State
@@ -122,9 +110,9 @@ export function useAIVoiceChat() {
 
       // Create new provider instance if needed
       if (!aiProvider.current) {
-        aiProvider.current = selectedModel === 'openai'
-          ? new OpenAIProvider() as AIProvider
-          : new UltravoxProvider() as AIProvider;
+        aiProvider.current = selectedModel === 'openai' 
+          ? new OpenAIProvider()
+          : new UltravoxProvider();
 
         // Set up handlers
         aiProvider.current.setStateChangeHandler(handleConnectionStateChange);
@@ -185,26 +173,7 @@ export function useAIVoiceChat() {
 
       // Add the track to the connection
       if (aiProvider.current) {
-        const audioContext = new AudioContext();
-        const source = audioContext.createMediaStreamSource(stream);
-        const processor = audioContext.createScriptProcessor(4096, 1, 1);
-
-        source.connect(processor);
-        processor.connect(audioContext.destination);
-
-        processor.onaudioprocess = async (e) => {
-          const inputData = e.inputBuffer.getChannelData(0);
-          const buffer = new ArrayBuffer(inputData.length * 2); // 16-bit audio
-          const int16Array = new Int16Array(buffer);
-          for (let i = 0; i < inputData.length; i++) {
-            int16Array[i] = Math.min(Math.max(-1, inputData[i]), 1) * 0x7FFF;
-          }
-          if (aiProvider.current) {
-            await aiProvider.current.processAudio(int16Array);
-          } else {
-            logDebug('AI provider is not initialized');
-          }
-        };
+        await aiProvider.current.addAudioTrack(audioTrack, stream);
       }
 
       // Apply initial mute state
