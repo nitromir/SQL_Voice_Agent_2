@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { SYSTEM_PROMPT } from '../../constants';
 
-export const runtime = 'edge';
+// Remove the edge runtime directive
+// export const runtime = 'edge';
 
 interface OpenAIResponse {
     id: string;
@@ -51,11 +52,10 @@ export async function POST(request: Request) {
         },
         turn_detection:{
           type: "server_vad",
-          // Optional parameters to fine-tune Voice Activity Detection (VAD)
-          threshold: 0.6, // Sensitivity of speech detection
-          prefix_padding_ms: 300, // Padding before detected speech
-          silence_duration_ms: 500 // Silence duration to consider speech ended
-          },
+          threshold: 0.6,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 500
+        },
         instructions: SYSTEM_PROMPT,
         temperature: 0.6,
         max_response_output_tokens: "inf",

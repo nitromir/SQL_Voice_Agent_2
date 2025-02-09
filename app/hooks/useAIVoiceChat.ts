@@ -16,7 +16,7 @@ export function useAIVoiceChat() {
   const [isConnected, setIsConnected] = useState(false);
   const [currentVisualization, setCurrentVisualization] = useState<Visualization | null>(null);
   const [isVisualizationFading, setIsVisualizationFading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('openai');
+  const [selectedModel, setSelectedModel] = useState<AIModel>('ultravox');
 
   // Services
   const audioService = useRef(new AudioService());

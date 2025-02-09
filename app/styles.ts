@@ -87,7 +87,7 @@ export const styles = {
     alignItems: 'center',
   },
   userMessage: {
-    color: '#ffc000',
+    color: '#87CEEB',
     fontSize: '1.4rem',
     fontWeight: '500',
     letterSpacing: '0.02em',
@@ -172,6 +172,17 @@ export const styles = {
 }
 
 export const keyframes = `
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   @keyframes slideUp {
     0% {
       transform: translateY(0);

@@ -1,46 +1,57 @@
-import { AIProvider, ConnectionState, Message, DebugInfo, Visualization } from '../services/ai/types';
+import { AIProvider, Message, Visualization, ConnectionState, DebugInfo } from '../types';
+import { AudioProcessor } from '../services/audio/AudioProcessor';
 
 export class OpenAIProvider implements AIProvider {
-    async processAudio(audioData: Int16Array): Promise<void> {
-        // Здесь можно добавить логику обработки аудиоданных
-        console.log(audioData);
+    private audioContext: AudioContext | null = null;
+    private workletNode: AudioWorkletNode | null = null;
+    private source: MediaStreamAudioSourceNode | null = null;
+    private audioProcessor: AudioProcessor | null = null;
 
-        // Пример отправки данных через другой механизм
-        // Например, через WebSocket или другой API
+    async processAudio(audioData: ArrayBuffer): Promise<void> {
+        // Audio processing logic
+        console.log('Processing audio data:', audioData);
     }
 
     connect(): Promise<void> {
-        // Логика подключения к OpenAI
         return Promise.resolve();
     }
 
     disconnect(): void {
-        // Логика отключения от OpenAI
+        // Cleanup logic
+        if (this.audioProcessor) {
+            this.audioProcessor.cleanup();
+            this.audioProcessor = null;
+        }
     }
 
     isConnected(): boolean {
-        // Проверка состояния соединения
         return false;
     }
 
-    addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void> {
-        // Логика добавления аудиотрека
-        return Promise.resolve();
+    async addAudioTrack(track: MediaStreamTrack, stream: MediaStream): Promise<void> {
+        if (!this.audioProcessor) {
+            this.audioProcessor = new AudioProcessor();
+        }
+        await this.audioProcessor.initialize();
+        this.audioProcessor.connectStream(stream);
+        this.audioProcessor.setAudioDataHandler((data) => {
+            this.processAudio(data);
+        });
     }
 
     setStateChangeHandler(handler: (state: ConnectionState) => void): void {
-        // Установка обработчика изменения состояния соединения
+        // State change handler logic
     }
 
     setMessageHandler(handler: (message: Message) => void): void {
-        // Установка обработчика сообщений
+        // Message handler logic
     }
 
     setVisualizationHandler(handler: (visualization: Visualization | null) => void): void {
-        // Установка обработчика визуализации
+        // Visualization handler logic
     }
 
     setDebugHandler(handler: (info: DebugInfo) => void): void {
-        // Установка обработчика отладочной информации
+        // Debug handler logic
     }
 }

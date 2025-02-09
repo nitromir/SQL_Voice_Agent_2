@@ -2,26 +2,17 @@ export class AudioProcessor {
   private audioContext: AudioContext | null = null;
   private workletNode: AudioWorkletNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
-  private onAudioData?: (data: Int16Array) => void;
+  private onAudioData?: (data: ArrayBuffer) => void;
   private onAudioLevel?: (level: number) => void;
 
   async initialize(): Promise<void> {
-    // Create audio context with correct sample rate
     this.audioContext = new AudioContext({
-      sampleRate: 24000, // Set to 24kHz as required by OpenAI
+      sampleRate: 24000,
       latencyHint: 'interactive'
     });
 
-    console.log('🎵 AudioContext created:', {
-      sampleRate: this.audioContext.sampleRate,
-      state: this.audioContext.state
-    });
-
-    // Load audio worklet
     await this.audioContext.audioWorklet.addModule('/audioProcessor.js');
-    console.log('🎵 Audio worklet loaded');
 
-    // Create worklet node with specific options
     this.workletNode = new AudioWorkletNode(this.audioContext, 'audio-processor', {
       numberOfInputs: 1,
       numberOfOutputs: 1,
@@ -33,16 +24,8 @@ export class AudioProcessor {
       }
     });
 
-    console.log('🎵 Audio worklet node created');
-
-    // Handle messages from worklet
     this.workletNode.port.onmessage = (event) => {
       if (event.data.type === 'audio' && event.data.audio) {
-        console.log('🎵 Received audio data:', {
-          bytes: event.data.audio.byteLength,
-          level: event.data.level
-        });
-        
         this.onAudioData?.(event.data.audio);
         this.onAudioLevel?.(event.data.level);
       }
@@ -54,21 +37,15 @@ export class AudioProcessor {
       throw new Error('AudioProcessor not initialized');
     }
 
-    // Disconnect any existing source
     if (this.source) {
       this.source.disconnect();
     }
 
-    // Create and connect new source
     this.source = this.audioContext.createMediaStreamSource(stream);
-    console.log('🎵 Media stream source created');
-    
-    // Connect source directly to worklet
     this.source.connect(this.workletNode);
-    console.log('🎵 Audio nodes connected');
   }
 
-  setAudioDataHandler(handler: (data: Int16Array) => void): void {
+  setAudioDataHandler(handler: (data: ArrayBuffer) => void): void {
     this.onAudioData = handler;
   }
 
@@ -91,7 +68,5 @@ export class AudioProcessor {
       this.audioContext.close();
       this.audioContext = null;
     }
-
-    console.log('🎵 Audio processor cleaned up');
   }
 }

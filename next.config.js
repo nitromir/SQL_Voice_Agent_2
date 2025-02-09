@@ -1,10 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  experimental: {
-    appDir: true,
-  },
+  swcMinify: false, // Disable SWC minification due to WebContainer limitations
   webpack: (config) => {
     config.externals = [...config.externals, { canvas: 'canvas' }];
     return config;

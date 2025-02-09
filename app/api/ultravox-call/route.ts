@@ -28,7 +28,7 @@ export async function GET() {
       body: JSON.stringify({
         model: 'fixie-ai/ultravox-70B',
         systemPrompt,
-        voice: "Mark",
+        voice: "Tanya-English",
         temperature: 0.1,
         initialOutputMedium: 'MESSAGE_MEDIUM_VOICE',
         medium: {

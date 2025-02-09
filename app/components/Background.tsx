@@ -29,8 +29,8 @@ const Particles = () => {
             position: 'fixed',
             width: '3px',
             height: '3px',
-            background: '#ffc000',
-            boxShadow: '0 0 10px #ffc000',
+            background: '#4169E1',
+            boxShadow: '0 0 10px #4169E1',
             borderRadius: '50%',
             top: `${particle.top}%`,
             left: `${particle.left}%`,
@@ -65,7 +65,7 @@ export const Background: React.FC = () => {
         width: '200%',
         height: '200%',
         background: 'transparent url(http://assets.iceable.com/img/noise-transparent.png) repeat 0 0',
-        animation: 'moveBackground 10s linear infinite',
+        animation: 'moveBackgroundDiagonal 15s linear infinite',
         opacity: 0.1,
         zIndex: 1,
       }} />
@@ -73,44 +73,44 @@ export const Background: React.FC = () => {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&display=swap');
         
-        @keyframes moveBackground {
+        @keyframes moveBackgroundDiagonal {
           0% {
-            transform: translate(0, 0);
+            transform: translate(0, 0) rotate(0deg);
           }
           100% {
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) rotate(5deg);
           }
         }
 
         @keyframes float0 {
           0%, 100% {
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(0deg);
             opacity: 0.2;
           }
           50% {
-            transform: translate(100px, -100px) scale(1.5);
+            transform: translate(100px, -100px) scale(1.5) rotate(180deg);
             opacity: 0.6;
           }
         }
 
         @keyframes float1 {
           0%, 100% {
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(0deg);
             opacity: 0.2;
           }
           50% {
-            transform: translate(-100px, -150px) scale(1.5);
+            transform: translate(-100px, -150px) scale(1.5) rotate(-180deg);
             opacity: 0.6;
           }
         }
 
         @keyframes float2 {
           0%, 100% {
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(0deg);
             opacity: 0.2;
           }
           50% {
-            transform: translate(50px, -200px) scale(1.5);
+            transform: translate(50px, -200px) scale(1.5) rotate(90deg);
             opacity: 0.6;
           }
         }
