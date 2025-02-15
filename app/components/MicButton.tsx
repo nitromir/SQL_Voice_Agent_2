@@ -1,5 +1,5 @@
 import React from 'react';
-import { styles } from '../styles';
+import styles from '../styles/MicButton.module.css';
 
 interface MicButtonProps {
   isMicActive: boolean;
@@ -22,48 +22,21 @@ export const MicButton: React.FC<MicButtonProps> = ({
 }) => {
   return (
     <div style={{
-      position: 'fixed',
-      bottom: '1.5rem',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '1rem',
-      zIndex: 100,
+      position: 'fixed', bottom: '1.5rem', left: '50%', transform: 'translateX(-50%)',
+      display: 'flex', alignItems: 'center', gap: '1rem', zIndex: 100
     }}>
       {/* Mute Button */}
       <div 
         onClick={onMuteToggle}
-        style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          background: isMuted ? '#ff4b4b' : 'rgba(65, 105, 225, 0.1)',
-          border: '1px solid rgba(65, 105, 225, 0.3)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.3s ease-out',
-          '@media (min-width: 768px)': {
-            width: '50px',
-            height: '50px'
-          }
-        }}
+        className={styles.muteButton}
+        data-muted={isMuted}
       >
         <svg 
           width="20" 
           height="20" 
           viewBox="0 0 24 24" 
           fill="none"
-          style={{
-            transition: 'transform 0.3s ease-out',
-            opacity: isMuted ? 1 : 0.6,
-            '@media (min-width: 768px)': {
-              width: '24px',
-              height: '24px'
-            }
-          }}
+          style={{ transition: 'transform 0.3s ease-out', opacity: isMuted ? 1 : 0.6 }}
         >
           <path 
             d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9l4.19 4.18L21 20.73 4.27 3z"
@@ -74,53 +47,25 @@ export const MicButton: React.FC<MicButtonProps> = ({
 
       {/* Mic Button */}
       <div 
-        style={{
-          width: '70px',
-          height: '70px',
-          borderRadius: '50%',
-          background: 'rgba(65, 105, 225, 0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          transition: 'all 0.3s ease',
-          border: '2px solid rgba(65, 105, 225, 0.3)',
-          transform: isMicActive ? 'scale(1.1)' : 'scale(1)',
-          boxShadow: isMicActive ? '0 0 30px rgba(65, 105, 225, 0.3)' : 'none',
-          '@media (min-width: 768px)': {
-            width: '90px',
-            height: '90px'
-          }
-        }}
+        className={styles.micButton}
+        data-active={isMicActive}
         onClick={onClick}
       >
         {isProcessing && (
           <div 
             style={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              border: '3px solid rgba(65, 105, 225, 0.1)',
-              borderTop: '3px solid #4169E1',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
+              position: 'absolute', width: '100%', height: '100%',
+              border: '3px solid rgba(65, 105, 225, 0.1)', borderTop: '3px solid #4169E1',
+              borderRadius: '50%', animation: 'spin 1s linear infinite'
             }} 
           />
         )}
         <svg 
+          className={styles.micIcon}
           style={{
-            width: '35px',
-            height: '35px',
-            color: '#4169E1',
-            transition: 'all 0.3s ease',
             animation: (isMicActive || (hasMessages && lastMessageIsAssistant)) 
-              ? 'pulseScale 1s ease-in-out infinite' 
-              : 'none',
-            '@media (min-width: 768px)': {
-              width: '50px',
-              height: '50px'
-            }
-          }} 
+              ? 'pulseScale 1s ease-in-out infinite' : 'none'
+          }}
           viewBox="0 0 24 24" 
           fill="currentColor"
         >

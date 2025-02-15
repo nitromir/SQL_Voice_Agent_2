@@ -17,22 +17,41 @@ export class UltravoxProvider implements AIProvider {
   private audioProcessor: AudioProcessor | null = null;
   private sessionId: number | null = null;
   private ultravoxSession: UltravoxSession | null = null;
+  private ultravoxSessionClass: typeof UltravoxSession;
   private connectionState: ConnectionState = 'new';
   private stateChangeHandler?: (state: ConnectionState) => void;
   private messageHandler?: (message: Message) => void;
   private visualizationHandler?: (visualization: Visualization | null) => void;
   private debugHandler?: (info: DebugInfo) => void;
+  private isDisconnecting: boolean = false;
   private mediaStream: MediaStream | null = null;
+  private isReconnecting: boolean = false;
+  private connectionTimeout: NodeJS.Timeout | null = null;
+  private retryDelay: number = 2000; // 2 seconds delay between retries
+  private eventHandlers: {
+    status: ((event: any) => void) | null;
+    transcripts: ((event: any) => void) | null;
+    track: ((event: any) => void) | null;
+  } = {
+    status: null,
+    transcripts: null,
+    track: null
+  };
 
   constructor() {
     this.audioElement = new Audio();
     this.audioElement.autoplay = true;
+    this.ultravoxSessionClass = UltravoxSession;
     this.audioProcessor = new AudioProcessor();
     this.sessionId = Math.floor(Math.random() * 1000000);
   }
 
   private logDebug(action: string, ...args: any[]) {
-    console.log(action, ...args);
+    // Simple console log without triggering the debug handler
+    // Simple console log for debugging
+    console.log(`[Ultravox] ${action}`, ...args);
+
+    // Call debug handler with non-recursive action
     if (this.debugHandler) {
       this.debugHandler({ lastAction: action });
     }
@@ -41,8 +60,6 @@ export class UltravoxProvider implements AIProvider {
   private mapUltravoxStatusToConnectionState(status: UltravoxSessionStatus): ConnectionState {
     switch (status) {
       case UltravoxSessionStatus.DISCONNECTED:
-        return 'disconnected';
-      case UltravoxSessionStatus.DISCONNECTING:
         return 'disconnected';
       case UltravoxSessionStatus.CONNECTING:
         return 'connecting';
@@ -64,6 +81,21 @@ export class UltravoxProvider implements AIProvider {
     try {
       this.logDebug('Starting Ultravox connection...');
       
+      // If we're already trying to reconnect, wait
+      if (this.isReconnecting) {
+        return;
+      }
+      
+      this.isReconnecting = true;
+      
+      // Clear any existing timeout
+      if (this.connectionTimeout) {
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = null;
+      }
+
+      this.updateConnectionState('connecting');
+      
       // Get API key and create call
       const response = await fetch('/api/ultravox-call', {
         method: 'GET',
@@ -82,8 +114,26 @@ export class UltravoxProvider implements AIProvider {
         throw new Error('No join URL received from server');
       }
 
+      // Add delay before retry to avoid rate limits
+      if (this.isReconnecting) {
+        await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+      }
+
       // Initialize Ultravox session
-      this.ultravoxSession = new UltravoxSession();
+      if (this.ultravoxSession) {
+        try {
+          await this.ultravoxSession.leaveCall();
+        } catch (error) {
+          console.error('Error leaving previous call:', error);
+        }
+        this.ultravoxSession = null;
+      }
+
+      this.ultravoxSession = new this.ultravoxSessionClass();
+
+      // Set up event handlers before joining
+      this.removeEventHandlers();
+      this.setupEventHandlers();
 
       // Register tool implementations
       this.ultravoxSession.registerToolImplementations({
@@ -145,36 +195,18 @@ export class UltravoxProvider implements AIProvider {
       // Join the call
       await this.ultravoxSession.joinCall(joinUrl);
 
-      // Set up Ultravox event handlers
-      this.ultravoxSession.addEventListener('status', (event) => {
-        if (!this.ultravoxSession) return;
-        const status = this.ultravoxSession.status;
-        const newState = this.mapUltravoxStatusToConnectionState(status);
-        this.connectionState = newState;
-        if (this.stateChangeHandler) {
-          this.stateChangeHandler(newState);
-        }
-      });
-
-      this.ultravoxSession.addEventListener('transcripts', (event) => {
-        if (this.messageHandler && this.ultravoxSession) {
-          const transcripts = this.ultravoxSession.transcripts;
-          const latestTranscript = transcripts[transcripts.length - 1];
-          
-          if (latestTranscript && latestTranscript.speaker === 'agent') {
-            this.messageHandler({
-              id: String(Date.now()),
-              type: 'assistant',
-              text: latestTranscript.text,
-              partial: !latestTranscript.isFinal
-            });
-          }
-        }
-      });
-
       // Wait for initial connection
       const connectionTimeout = 10000;
       const startTime = Date.now();
+
+      // Set a timeout to handle connection failure
+      this.connectionTimeout = setTimeout(() => {
+        if (this.connectionState !== 'connected') {
+          this.logDebug('Connection timeout - failed to establish connection');
+          // Don't immediately fail - let the retry mechanism in useAIVoiceChat handle it
+          this.updateConnectionState('disconnected');
+        }
+      }, connectionTimeout);
       
       while (Date.now() - startTime < connectionTimeout) {
         if (this.ultravoxSession && 
@@ -183,6 +215,12 @@ export class UltravoxProvider implements AIProvider {
           break;
         }
         await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // Clear timeout if connection succeeded
+      if (this.connectionTimeout) {
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = null;
       }
 
       if (!this.ultravoxSession || this.ultravoxSession.status === UltravoxSessionStatus.DISCONNECTED) {
@@ -198,37 +236,128 @@ export class UltravoxProvider implements AIProvider {
       });
 
     } catch (error) {
+      this.isReconnecting = false;
       this.logDebug('Connection error:', error);
-      this.connectionState = 'failed';
-      if (this.stateChangeHandler) {
-        this.stateChangeHandler('failed');
-      }
+      this.updateConnectionState('failed');
       throw error;
+    } finally {
+      this.isReconnecting = false;
+    }
+  }
+
+  private removeEventHandlers(): void {
+    if (this.ultravoxSession) {
+      Object.entries(this.eventHandlers).forEach(([event, handler]) => {
+        if (handler) {
+          this.ultravoxSession?.removeEventListener(event as 'status' | 'transcripts' | 'track', handler);
+        }
+      });
+      // Reset handlers
+      this.eventHandlers = {
+        status: null,
+        transcripts: null,
+        track: null
+      };
+    }
+  }
+
+  private setupEventHandlers(): void {
+    if (!this.ultravoxSession) return;
+
+    // Create new status handler
+    this.eventHandlers.status = (event: any) => {
+      if (!this.ultravoxSession) return;
+      const status = this.ultravoxSession.status;
+      const newState = this.mapUltravoxStatusToConnectionState(status);
+      this.updateConnectionState(newState);
+      if (status === UltravoxSessionStatus.DISCONNECTED) {
+        this.disconnect();
+      }
+    };
+
+    // Create new transcripts handler
+    this.eventHandlers.transcripts = (event: any) => {
+      if (this.messageHandler && this.ultravoxSession) {
+        const transcripts = this.ultravoxSession.transcripts;
+        const latestTranscript = transcripts[transcripts.length - 1];
+        
+        if (latestTranscript && latestTranscript.speaker === 'agent') {
+          this.messageHandler({
+            id: String(Date.now()),
+            type: 'assistant',
+            text: latestTranscript.text,
+            partial: !latestTranscript.isFinal
+          });
+        }
+      }
+    };
+
+    // Create new track handler
+    this.eventHandlers.track = (event: any) => {
+      if (event.track.kind === 'audio' && this.audioElement) {
+        const stream = new MediaStream([event.track]);
+        this.audioElement.srcObject = stream;
+      }
+    };
+
+    // Add event listeners
+    Object.entries(this.eventHandlers).forEach(([event, handler]) => {
+      if (handler && this.ultravoxSession) {
+        this.ultravoxSession.addEventListener(event as 'status' | 'transcripts' | 'track', handler);
+      }
+    });
+  }
+
+  private updateConnectionState(state: ConnectionState): void {
+    this.connectionState = state;
+    if (this.stateChangeHandler) {
+      this.stateChangeHandler(state);
     }
   }
 
   async disconnect(): Promise<void> {
     try {
+      if (this.isDisconnecting) return;
+      this.isReconnecting = false;
+      
+      // Clear any pending connection timeout
+      if (this.connectionTimeout) {
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = null;
+      }
+
+      this.isDisconnecting = true;
+
       if (this.mediaStream) {
         this.mediaStream.getTracks().forEach(track => track.stop());
         this.mediaStream = null;
       }
 
-      if (this.ultravoxSession) {
-        await this.ultravoxSession.leaveCall();
-        this.ultravoxSession = null;
+      const session = this.ultravoxSession;
+      this.ultravoxSession = null;
+
+      if (session) {
+        try {
+          await session.leaveCall();
+        } catch (error) {
+          console.error('Error leaving call:', error);
+        }
       }
 
       if (this.audioElement) {
         this.audioElement.srcObject = null;
+        this.audioElement = null;
+        this.mediaStream = null;
       }
+      
+      // Remove event handlers
+      this.removeEventHandlers();
 
-      this.connectionState = 'disconnected';
-      if (this.stateChangeHandler) {
-        this.stateChangeHandler('disconnected');
-      }
+      this.updateConnectionState('disconnected');
+      this.isDisconnecting = false;
     } catch (error) {
       this.logDebug('Disconnection error:', error);
+      this.isDisconnecting = false;
       throw error;
     }
   }

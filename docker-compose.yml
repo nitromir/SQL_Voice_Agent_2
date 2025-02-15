@@ -1,0 +1,13 @@
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - ULTRAVOX_API_KEY=${ULTRAVOX_API_KEY}
+      - N8N_SQL_AGENT_ENDPOINT=${N8N_SQL_AGENT_ENDPOINT}
+      - SYSTEM_PROMPT=${SYSTEM_PROMPT}
+    restart: unless-stopped

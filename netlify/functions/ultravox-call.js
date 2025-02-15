@@ -1,25 +1,19 @@
-import { NextResponse } from 'next/server';
-import { SYSTEM_PROMPT } from '../../constants';
+const fetch = require('node-fetch');
 
-export async function GET() {
+exports.handler = async function(event, context) {
   try {
     const ULTRAVOX_API_KEY = process.env.ULTRAVOX_API_KEY;
     
     if (!ULTRAVOX_API_KEY) {
-      const error = 'ULTRAVOX_API_KEY is not configured. Please add ULTRAVOX_API_KEY to your .env file.';
-      console.error(error);
-      return NextResponse.json(
-        { 
-          error,
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: 'ULTRAVOX_API_KEY is not configured',
           details: 'Visit https://docs.fixie.ai to get your API key.'
-        },
-        { status: 500 }
-      );
+        })
+      }
     }
 
-    const systemPrompt = SYSTEM_PROMPT;
-
-    // Create a new Ultravox call
     const response = await fetch('https://api.ultravox.ai/api/calls', {
       method: 'POST',
       headers: {
@@ -28,7 +22,7 @@ export async function GET() {
       },
       body: JSON.stringify({
         model: 'fixie-ai/ultravox-70B',
-        systemPrompt,
+        systemPrompt: process.env.SYSTEM_PROMPT,
         voice: "Tanya-English",
         temperature: 0.1,
         initialOutputMedium: 'MESSAGE_MEDIUM_VOICE',
@@ -38,7 +32,6 @@ export async function GET() {
         joinTimeout: '30s',
         maxDuration: '3600s',
         firstSpeaker: 'FIRST_SPEAKER_AGENT',
-
         selectedTools: [{
           temporaryTool: {
             modelToolName: 'query_database',
@@ -53,7 +46,7 @@ export async function GET() {
               },
               required: true
             }],
-            client: {} // Specify this is a client-side tool
+            client: {}
           }
         },
         {
@@ -102,7 +95,7 @@ export async function GET() {
               },
               required: false
             }],
-            client: {} // Specify this is a client-side tool
+            client: {}
           }
         }],
         recordingEnabled: false
@@ -125,16 +118,30 @@ export async function GET() {
       throw new Error('No join URL received from Ultravox API');
     }
 
-    return NextResponse.json(data);
-    
-  } catch (error: any) {
-    console.error('Error creating Ultravox call:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to create Ultravox call',
-        details: error.message
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
       },
-      { status: 500 }
-    );
+      body: JSON.stringify(data)
+    };
+  } catch (error) {
+    console.error('Error creating Ultravox call:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+      },
+      body: JSON.stringify({ 
+        error: 'Failed to create Ultravox call',
+        details: error instanceof Error ? error.message : String(error)
+      })
+    };
   }
-}
+};

@@ -26,9 +26,19 @@ interface OpenAIResponse {
 }
 
 export async function POST(request: Request) {
-  if (!process.env.OPENAI_API_KEY) {
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.trim();
+  
+  if (!OPENAI_API_KEY) {
     return NextResponse.json(
-      { error: 'OpenAI API key not configured' },
+      { error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.' },
+      { status: 500 }
+    );
+  }
+  
+  // Validate API key format
+  if (!OPENAI_API_KEY.startsWith('sk-')) {
+    return NextResponse.json(
+      { error: 'Invalid OpenAI API key format. Key should start with "sk-".' },
       { status: 500 }
     );
   }
@@ -38,7 +48,7 @@ export async function POST(request: Request) {
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const { query, sessionId } = await request.json();
 
     if (!N8N_ENDPOINT) {
-      throw new Error('N8N SQL Agent endpoint not configured');
+      throw new Error('N8N SQL Agent endpoint not configured. Please add N8N_SQL_AGENT_ENDPOINT to your .env file.');
     }
 
     // Ensure sessionId is a number

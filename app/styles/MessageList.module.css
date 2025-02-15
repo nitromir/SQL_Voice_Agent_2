@@ -1,0 +1,45 @@
+.messageContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  max-height: 100%;
+  padding: 10px 15px;
+}
+
+.messageContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.message {
+  padding: 10px 12px;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  max-width: 85%;
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease-out;
+  backdrop-filter: blur(8px);
+  margin-bottom: 4px;
+  position: relative;
+  transition: all 0.2s ease-out;
+}
+
+.assistant {
+  background: rgba(65, 105, 225, 0.15);
+  border-radius: 16px 16px 16px 4px;
+  color: #fff;
+  align-self: flex-start;
+  border: 1px solid rgba(65, 105, 225, 0.2);
+  box-shadow: 0 2px 4px rgba(65, 105, 225, 0.1);
+}
+
+.user {
+  background: rgba(135, 206, 235, 0.15);
+  border-radius: 16px 16px 4px 16px;
+  color: #87CEEB;
+  align-self: flex-end;
+  border: 1px solid rgba(135, 206, 235, 0.2);
+  box-shadow: 0 2px 4px rgba(135, 206, 235, 0.1);
+}

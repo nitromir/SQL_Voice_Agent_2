@@ -1,9 +1,19 @@
 declare module 'ultravox-client' {
-  export interface UltravoxSession {
-    // Определите интерфейс UltravoxSession здесь
+  export class UltravoxSession {
+    constructor();
     peerConnection?: RTCPeerConnection;
     status: UltravoxSessionStatus;
-    // Добавьте другие необходимые свойства и методы
+    transcripts: Array<{
+      text: string;
+      isFinal: boolean;
+      speaker: 'user' | 'agent';
+      medium: 'voice' | 'text';
+    }>;
+    addEventListener(event: 'status' | 'transcripts' | 'track', handler: (event: any) => void): void;
+    removeEventListener(event: 'status' | 'transcripts' | 'track', handler: (event: any) => void): void;
+    public joinCall(joinUrl: string): Promise<void>;
+    public leaveCall(): Promise<void>;
+    public registerToolImplementations(tools: Record<string, Function>): void;
   }
 
   export enum UltravoxSessionStatus {
@@ -11,7 +21,8 @@ declare module 'ultravox-client' {
     DISCONNECTING = 'disconnecting',
     CONNECTING = 'connecting',
     IDLE = 'idle',
-    LISTENING = 'listening'
-    // Добавьте другие необходимые статусы
+    LISTENING = 'listening',
+    THINKING = 'thinking',
+    SPEAKING = 'speaking'
   }
-} 
+}

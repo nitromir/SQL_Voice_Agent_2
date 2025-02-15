@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { AudioService } from '../services/audio/AudioService';
 import { OpenAIProvider } from '../services/ai/openai';
-import { UltravoxProvider } from '../services/ai/ultravox-provider';
+import { UltravoxProvider } from '../providers/UltravoxProvider';
 import { Message, Visualization, DebugInfo, AIProvider, ConnectionState } from '../types';
 
 export type AIModel = 'openai' | 'ultravox';
@@ -16,7 +16,9 @@ export function useAIVoiceChat() {
   const [isConnected, setIsConnected] = useState(false);
   const [currentVisualization, setCurrentVisualization] = useState<Visualization | null>(null);
   const [isVisualizationFading, setIsVisualizationFading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModel>('ultravox');
+  const [selectedModel] = useState<'ultravox'>('ultravox');
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 2;
 
   // Services
   const audioService = useRef(new AudioService());
@@ -56,16 +58,22 @@ export function useAIVoiceChat() {
   // Handle connection state change
   const handleConnectionStateChange = useCallback((state: ConnectionState) => {
     logDebug(`Connection state changed: ${state}`);
-    setIsConnected(state === 'connected');
-    if (state === 'failed') {
-      setDebugInfo(prev => ({
-        ...prev,
-        lastError: `Connection failed`,
-        lastAction: `Connection failed`
-      }));
-      cleanup();
-    } else if (state === 'disconnected') {
-      cleanup();
+    
+    if (state === 'failed' || state === 'disconnected') {
+      // Only show error if it's a failure, not a user-initiated disconnect
+      if (state === 'failed') {
+        setDebugInfo(prev => ({
+          ...prev,
+          lastError: 'Connection failed',
+          lastAction: state
+        }));
+      }
+      // Only cleanup if not already cleaning up
+      if (state !== 'disconnected') {
+        cleanup();
+      }
+    } else {
+      setIsConnected(state === 'connected');
     }
   }, [logDebug, cleanup]);
 
@@ -105,14 +113,14 @@ export function useAIVoiceChat() {
   // Start recording
   const startRecording = useCallback(async () => {
     try {
+      // Reset retry count on new recording attempt
+      setRetryCount(0);
       setIsProcessing(true);
       setDebugInfo({}); // Clear previous errors
 
       // Create new provider instance if needed
       if (!aiProvider.current) {
-        aiProvider.current = selectedModel === 'openai' 
-          ? new OpenAIProvider()
-          : new UltravoxProvider();
+        aiProvider.current = new UltravoxProvider();
 
         // Set up handlers
         aiProvider.current.setStateChangeHandler(handleConnectionStateChange);
@@ -125,7 +133,19 @@ export function useAIVoiceChat() {
           await aiProvider.current.connect();
           
           // Wait for connection to be established
-          const connectionTimeout = 10000; // 10 seconds timeout
+          const connectionTimeout = 15000; // 15 seconds timeout
+          
+          // If connection fails, retry up to maxRetries times
+          if (!aiProvider.current.isConnected() && retryCount < maxRetries) {
+            setRetryCount(prev => prev + 1);
+            setDebugInfo(prev => ({
+              ...prev,
+              lastAction: `Retrying connection (attempt ${retryCount + 1}/${maxRetries})...`
+            }));
+            await startRecording();
+            return;
+          }
+          
           const startTime = Date.now();
           
           while (Date.now() - startTime < connectionTimeout) {
@@ -135,7 +155,7 @@ export function useAIVoiceChat() {
             await new Promise(resolve => setTimeout(resolve, 100));
           }
           
-          if (!aiProvider.current.isConnected()) {
+          if (!aiProvider.current.isConnected() && retryCount >= maxRetries) {
             throw new Error('Connection timeout - connection not established');
           }
         } catch (error) {
@@ -197,6 +217,7 @@ export function useAIVoiceChat() {
 
   // Stop recording
   const stopRecording = useCallback(() => {
+    setDebugInfo({ lastAction: 'Call ended by user' });
     cleanup();
     logDebug('Recording stopped');
   }, [cleanup, logDebug]);
@@ -250,7 +271,6 @@ export function useAIVoiceChat() {
     currentVisualization,
     isVisualizationFading,
     selectedModel,
-    setSelectedModel,
     startRecording,
     stopRecording,
     toggleMute

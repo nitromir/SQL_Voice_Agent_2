@@ -18,7 +18,6 @@ export default function Home() {
     currentVisualization,
     isVisualizationFading,
     selectedModel,
-    setSelectedModel,
     startRecording,
     stopRecording,
     toggleMute
@@ -140,10 +139,6 @@ export default function Home() {
         boxShadow: '0 0 30px rgba(65, 105, 225, 0.1)',
         zIndex: 2,
         overflow: 'hidden',
-        '@media (max-height: 700px)': {
-          height: '80vh',
-          maxHeight: '500px',
-        }
       }}>
         {/* Phone Notch */}
         <div style={{
@@ -162,12 +157,7 @@ export default function Home() {
           padding: '10px 15px',
           display: 'flex',
           flexDirection: 'column',
-          WebkitOverflowScrolling: 'touch',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none',
-          '::-webkit-scrollbar': {
-            display: 'none'
-          }
+          WebkitOverflowScrolling: 'touch'
         }}>
           <MessageList messages={messages} />
           {currentVisualization && (
@@ -192,9 +182,7 @@ export default function Home() {
         }} />
       </div>
 
-      <select
-        value={selectedModel}
-        onChange={(e) => setSelectedModel(e.target.value as 'openai' | 'ultravox')}
+      <div
         style={{
           position: 'fixed',
           top: '1rem',
@@ -208,29 +196,10 @@ export default function Home() {
           color: '#4169E1',
           fontSize: '0.875rem',
           fontFamily: 'inherit',
-          cursor: 'pointer',
-          outline: 'none',
-          transition: 'all 0.2s ease-out',
-          WebkitAppearance: 'none',
-          appearance: 'none',
-          backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234169E1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 0.5rem center',
-          backgroundSize: '1rem',
-          paddingRight: '2rem',
         }}
       >
-        <option value="openai" style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          color: '#4169E1',
-          fontSize: '1rem'
-        }}>OpenAI</option>
-        <option value="ultravox" style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          color: '#4169E1',
-          fontSize: '1rem'
-        }}>Ultravox</option>
-      </select>
+        Ultravox
+      </div>
 
       <MicButton 
         isMicActive={isMicActive}
@@ -265,7 +234,7 @@ export default function Home() {
             color: '#fff',
             textAlign: 'center',
             textShadow: '0 0 10px rgba(65, 105, 225, 0.2)',
-          }}>Error: {debugInfo.lastError}</div>
+          }}>{debugInfo.lastError.startsWith('Error:') ? debugInfo.lastError : debugInfo.lastAction}</div>
         </div>
       )}
     </main>

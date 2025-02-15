@@ -22,6 +22,7 @@ export class UltravoxProvider implements AIProvider {
   private messageHandler?: (message: Message) => void;
   private visualizationHandler?: (visualization: Visualization | null) => void;
   private debugHandler?: (info: DebugInfo) => void;
+  private isDisconnecting: boolean = false;
   private mediaStream: MediaStream | null = null;
 
   constructor() {
@@ -209,26 +210,38 @@ export class UltravoxProvider implements AIProvider {
 
   async disconnect(): Promise<void> {
     try {
+      if (this.isDisconnecting) return;
+      this.isDisconnecting = true;
+
       if (this.mediaStream) {
         this.mediaStream.getTracks().forEach(track => track.stop());
         this.mediaStream = null;
       }
 
-      if (this.ultravoxSession) {
-        await this.ultravoxSession.leaveCall();
-        this.ultravoxSession = null;
+      const session = this.ultravoxSession;
+      this.ultravoxSession = null;
+
+      if (session) {
+        try {
+          await session.leaveCall();
+        } catch (error) {
+          console.error('Error leaving call:', error);
+        }
       }
 
       if (this.audioElement) {
         this.audioElement.srcObject = null;
+        this.audioElement = null;
       }
 
       this.connectionState = 'disconnected';
       if (this.stateChangeHandler) {
         this.stateChangeHandler('disconnected');
       }
+      this.isDisconnecting = false;
     } catch (error) {
       this.logDebug('Disconnection error:', error);
+      this.isDisconnecting = false;
       throw error;
     }
   }

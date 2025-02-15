@@ -562,7 +562,7 @@ export class OpenAIProvider implements AIProvider {
     // Set up audio data handler
     this.audioProcessor.setAudioDataHandler((audioData) => {
       if (this.dc?.readyState === 'open') {
-        this.processAudio(audioData.buffer);
+        this.processAudio(audioData);
       }
     });
 
