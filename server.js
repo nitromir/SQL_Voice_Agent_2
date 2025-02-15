@@ -2,6 +2,7 @@ const express = require('express');
 const next = require('next');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 // Load environment variables
 dotenv.config();
@@ -277,6 +278,9 @@ app.prepare().then(() => {
       });
     }
   });
+
+  // Serve static files from the out directory
+  server.use(express.static('out'));
 
   // Handle all other routes with Next.js
   server.all('*', (req, res) => {
