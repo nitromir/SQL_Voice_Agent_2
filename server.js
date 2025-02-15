@@ -132,6 +132,7 @@ app.prepare().then(() => {
   server.get('/api/ultravox-call', async (req, res) => {
     try {
       const ULTRAVOX_API_KEY = process.env.ULTRAVOX_API_KEY;
+      console.log('Attempting Ultravox call with API key:', ULTRAVOX_API_KEY ? 'Present' : 'Missing');
       
       if (!ULTRAVOX_API_KEY) {
         const error = 'ULTRAVOX_API_KEY is not configured. Please add ULTRAVOX_API_KEY to your .env file.';
@@ -143,13 +144,16 @@ app.prepare().then(() => {
       }
 
       const systemPrompt = process.env.SYSTEM_PROMPT;
+      console.log('System prompt:', systemPrompt ? 'Present' : 'Missing');
 
       const response = await fetch('https://api.ultravox.ai/api/calls', {
         method: 'POST',
         headers: {
           'X-API-Key': ULTRAVOX_API_KEY.trim(),
           'Content-Type': 'application/json'
-        },
+        }, 
+        // Add timeout to prevent hanging requests
+        timeout: 10000,
         body: JSON.stringify({
           model: 'fixie-ai/ultravox-70B',
           systemPrompt,
@@ -235,9 +239,12 @@ app.prepare().then(() => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: response.statusText }));
         console.error('Ultravox API error:', {
+          endpoint: 'https://api.ultravox.ai/api/calls',
           status: response.status,
           statusText: response.statusText,
-          error: errorData
+          error: errorData,
+          apiKeyPresent: !!ULTRAVOX_API_KEY,
+          systemPromptPresent: !!systemPrompt
         });
         throw new Error(`Ultravox API error: ${errorData.error || response.statusText}`);
       }
