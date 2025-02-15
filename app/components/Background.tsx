@@ -64,7 +64,7 @@ export const Background: React.FC = () => {
         bottom: '-50%',
         width: '200%',
         height: '200%',
-        background: 'transparent url(http://assets.iceable.com/img/noise-transparent.png) repeat 0 0',
+        background: 'transparent url(/noise.png) repeat 0 0',
         animation: 'moveBackgroundDiagonal 15s linear infinite',
         opacity: 0.1,
         zIndex: 1,

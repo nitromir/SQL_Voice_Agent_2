@@ -19,6 +19,10 @@ app.prepare().then(() => {
   server.use(cors());
   server.use(express.json());
 
+  // Serve static files from the out directory first
+  server.use(express.static('out'));
+  server.use(express.static('public'));
+
   // API Routes
   server.post('/api/session', async (req, res) => {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.trim();
@@ -278,9 +282,6 @@ app.prepare().then(() => {
       });
     }
   });
-
-  // Serve static files from the out directory
-  server.use(express.static('out'));
 
   // Handle all other routes with Next.js
   server.all('*', (req, res) => {
