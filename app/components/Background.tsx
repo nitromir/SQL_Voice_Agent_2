@@ -64,7 +64,7 @@ export const Background: React.FC = () => {
         bottom: '-50%',
         width: '200%',
         height: '200%',
-        background: 'transparent url(/noise.png) repeat 0 0',
+        background: 'radial-gradient(circle at 50% 50%, rgba(65, 105, 225, 0.05) 0%, transparent 50%)',
         animation: 'moveBackgroundDiagonal 15s linear infinite',
         opacity: 0.1,
         zIndex: 1,
